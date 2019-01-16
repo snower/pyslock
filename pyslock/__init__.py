@@ -29,3 +29,4 @@ version_info = (0, 0, 1)
 
 from .client import Client
 from .reader import Reader
+from .asyncio.client import AsyncClient

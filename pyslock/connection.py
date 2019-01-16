@@ -4,7 +4,7 @@
 
 import socket
 import threading
-from .result import Result
+from .protocol.result import Result
 
 class ConnectionClosed(Exception):
     pass
@@ -75,7 +75,7 @@ class Connection(object):
 
             self._buffer += data
             if len(self._buffer) >= 64:
-                data, self._buffer = self._buffer[:64], buffer[64:]
+                data, self._buffer = self._buffer[:64], self._buffer[64:]
                 result = Result(data)
                 return result
             return None

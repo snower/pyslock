@@ -8,7 +8,7 @@ from setuptools import setup
 setup(
     name='pyslock',
     version='0.0.1',
-    packages=['pyslock'],
+    packages=['pyslock', 'pyslock.protocol', 'pyslock.asyncio'],
     install_requires=[],
     author='snower',
     author_email='sujian199@gmail.com',

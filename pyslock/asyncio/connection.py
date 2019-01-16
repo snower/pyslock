@@ -2,71 +2,119 @@
 # 18/8/3
 # create by: snower
 
-import time
-import socket
-from tornado.iostream import IOStream
-from tornado.ioloop import IOLoop
+from __future__ import absolute_import, division, print_function
+
+from asyncio import coroutine, events, Protocol, ensure_future
+from ..protocol.result import Result
 
 
 class ConnectTimeOutError(Exception):
     pass
 
 
-class Connection(object):
+class Connection(Protocol):
     def __init__(self, client, host="127.0.0.1", port=5658):
         self._client = client
         self._host = host
         self._port = port
-        self._buffer = []
+        self._wbuffer = []
+        self._rbuffer = ''
+        self._rbuffer_size = 0
         self._stream = None
+        self._loop_connect_timeout = None
         self._connecting = False
         self._connected = False
-
-    def connect(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-        self._stream = IOStream(s)
-        self._stream.set_close_callback(self.on_close)
-        self._stream.connect((self._host, self._port), self.on_connect)
-        self._connecting = True
-
-        def timeout():
-            if not self._connected:
-                for command, future in self._buffer:
-                    future.set_exception(ConnectTimeOutError())
-                self._buffer = []
-                self._connecting = False
-        IOLoop.current().add_timeout(time.time() + 5, timeout)
+        self._transport = None
 
     def on_close(self):
         self._connected = False
+        self._client.on_connection_close()
+
+    @coroutine
+    def _connect(self, address):
+        if isinstance(address, (str, bytes)):
+            self._transport, _ = yield from self._loop.create_unix_connection(lambda : self, address)
+        else:
+            self._transport, _ = yield from self._loop.create_connection(lambda : self, address[0], address[1])
+
+    def connect(self):
+        self._loop = events.get_event_loop()
+
+        def connected(connect_future):
+            if self._loop_connect_timeout:
+                self._loop_connect_timeout.cancel()
+                self._loop_connect_timeout = None
+
+            try:
+                self._stream = connect_future.result()
+                self._connected = True
+
+                for command, future in self._wbuffer:
+                    self.write(command, future)
+                self._wbuffer = []
+            except:
+                self.on_close()
+            self._connecting = False
+
+        self._connecting = True
+        connect_future = ensure_future(self._connect((self._host, self._port)))
+        connect_future.add_done_callback(connected)
+
+        def timeout():
+            if not self._connected:
+                for command, future in self._wbuffer:
+                    future.set_exception(ConnectTimeOutError())
+                self._wbuffer = []
+                self._transport = None
+                self._stream = None
+                self._connecting = False
+            self._loop_connect_timeout = None
+
+        self._loop_connect_timeout = self._loop.call_later(5, timeout)
+
+    def connection_made(self, transport):
+        self._transport = transport
+        if self._connected:
+            transport.close()
+        else:
+            self._transport.set_write_buffer_limits(1024 * 1024 * 1024)
+
+    def data_received(self, data):
+        self._rbuffer += data
+        self._rbuffer_size += data
+
+        while self._rbuffer_size >= 64:
+            data, self._rbuffer = self._rbuffer[:64], self._rbuffer[64:]
+            self._rbuffer_size -= 64
+            result = Result(data)
+            self._client.on_result(result)
+
+    def connection_lost(self, exc):
+        self.on_close()
+        self._transport = None
+        self._stream = None
+
+    def eof_received(self):
+        return False
 
     def write(self, command, future):
         if not self._connected:
             if not self._connecting:
                 self.connect()
-            self._buffer.append((command, future))
+            self._wbuffer.append((command, future))
         else:
             try:
                 command = command.dumps()
                 command += (64 - len(command)) * b'\x00'
-                self._stream.write(command)
+                self._transport.write(command)
             except Exception as e:
                 future.set_exception(e)
 
-    def on_connect(self):
-        self._connected = True
-        self._connecting = False
-        for command, future in self._buffer:
-            self.write(command, future)
-        self.loop()
-
-    def loop(self):
-        def on_data(data):
-            self._client.on_data(data)
-            self._stream.read_bytes(64, on_data)
-        self._stream.read_bytes(64, on_data)
-
     def close(self):
-        self._stream.close()
-        self._stream = None
-        self._connected = False
+        if not self._connected:
+            return
+
+        if self._transport:
+            self._transport.close()
+        else:
+            self.on_close()
