@@ -3,7 +3,7 @@
 # create by: snower
 
 
-from .utils import ensure_unicode, bytetoint
+from ..utils import ensure_unicode, bytetoint
 
 class ResultDataIllegalError(Exception):
     pass

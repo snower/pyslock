@@ -10,13 +10,18 @@ class ConnectionClosed(Exception):
     pass
 
 class Connection(object):
-    def __init__(self, host="127.0.0.1", port=5658):
+    def __init__(self, host="127.0.0.1", port=5658, reader_factory = None):
         self._host = host
         self._port = port
         self._sock = None
         self._rlock = threading.Lock()
         self._wlock = threading.Lock()
         self._buffer = bytearray()
+        self._reader = reader_factory(self)
+
+    @property
+    def reader(self):
+        return self._reader
 
     def connect(self):
         err = None
@@ -76,6 +81,6 @@ class Connection(object):
             self._buffer += data
             if len(self._buffer) >= 64:
                 data, self._buffer = self._buffer[:64], self._buffer[64:]
-                result = Result(data)
+                result = Result(bytes(data))
                 return result
             return None

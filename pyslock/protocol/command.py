@@ -3,8 +3,8 @@
 # create by: snower
 
 import struct
-from bson.objectid import ObjectId
-from .utils import ensure_bytes
+from ..utils import UniqId
+from ..utils import ensure_bytes
 
 class Command(object):
     MAGIC = 0x56
@@ -27,7 +27,7 @@ class Command(object):
         self.count = count
 
     def generate(self):
-        return ObjectId().binary + b"\x00\x00\x00\x00"
+        return UniqId().to_bytes()
 
     def dumps(self):
         return struct.pack("<BBB16sBB16s16sIIHB", self.MAGIC, self.version, self.command, ensure_bytes(self.request_id),

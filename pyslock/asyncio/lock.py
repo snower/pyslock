@@ -2,7 +2,7 @@
 # 18/8/3
 # create by: snower
 
-from bson.objectid import ObjectId
+from ..utils import UniqId
 from asyncio import Future
 from ..protocol.command import Command
 from ..protocol.result import *
@@ -53,7 +53,7 @@ class Lock(object):
         self._unlock_future = None
 
     def generate(self):
-        return ObjectId().binary + b"\x00\x00\x00\x00"
+        return UniqId().to_bytes()
 
     def acquire(self):
         if self._lock_future:
@@ -108,3 +108,10 @@ class Lock(object):
             else:
                 e = LockException()
             self._unlock_future.set_exception(e)
+
+    async def __aenter__(self):
+        await self.acquire()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.release()

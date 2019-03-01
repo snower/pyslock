@@ -2,7 +2,7 @@
 # 14-8-6
 # create by: snower
 
-from bson.objectid import ObjectId
+from .utils import UniqId
 from .protocol.command import Command
 from .protocol.result import *
 
@@ -46,7 +46,7 @@ class Lock(object):
         self._max_count = max_count
 
     def generate(self):
-        return ObjectId().binary + "\x00\x00\x00\x00"
+        return UniqId().to_bytes()
 
     def acquire(self):
         command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, 0, max(self._max_count - 1, 0))
@@ -95,7 +95,4 @@ class Lock(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        try:
-            self.release()
-        except:
-            pass
+        self.release()

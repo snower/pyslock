@@ -5,26 +5,23 @@
 from .database import DataBase
 from .connection import Connection
 from .pool import ConnectionPool
-from .reader import Reader
 
 class Client(object):
-    def __init__(self, host, port=5658, db_range = 256, max_connection = None, reader = None):
-        if reader is not None:
-            max_connection = 1
+    def __init__(self, host, port=5658, db_range = 256, max_connection = 1, reader_factory = None):
+        def reader_factory_func(connection):
+            if reader_factory is None:
+                from .reader import Reader
+                return Reader(self, connection)
+
+            return reader_factory(self, connection)
 
         if max_connection == 1:
-            self._connection = Connection(host, port)
+            self._connection = Connection(host, port, reader_factory_func)
+            self._connection.reader.start()
             self._connection_pool = None
         else:
             self._connection = None
-            self._connection_pool = ConnectionPool(host, port, max_connection)
-
-        if reader:
-            if not isinstance(reader, Reader):
-                self._reader = Reader(self._connection)
-            else:
-                self._reader = reader
-            self._reader.set_client(self)
+            self._connection_pool = ConnectionPool(host, port, max_connection, reader_factory_func)
 
         self._dbs = [None for _ in range(db_range)]
         self.select(0)
@@ -48,9 +45,6 @@ class Client(object):
 
     def get_connection(self):
         if self._connection:
-            if self._reader and not self._reader.is_running:
-                self._reader.start()
-
             return self._connection
 
         return self._connection_pool.get_connection()

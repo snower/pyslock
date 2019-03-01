@@ -18,7 +18,7 @@ class Connection(Protocol):
         self._host = host
         self._port = port
         self._wbuffer = []
-        self._rbuffer = ''
+        self._rbuffer = bytearray()
         self._rbuffer_size = 0
         self._stream = None
         self._loop_connect_timeout = None
@@ -81,12 +81,12 @@ class Connection(Protocol):
 
     def data_received(self, data):
         self._rbuffer += data
-        self._rbuffer_size += data
+        self._rbuffer_size += len(data)
 
         while self._rbuffer_size >= 64:
             data, self._rbuffer = self._rbuffer[:64], self._rbuffer[64:]
             self._rbuffer_size -= 64
-            result = Result(data)
+            result = Result(bytes(data))
             self._client.on_result(result)
 
     def connection_lost(self, exc):

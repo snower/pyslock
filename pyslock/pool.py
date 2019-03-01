@@ -15,7 +15,7 @@ class Connection(BaseConnection):
         self._pool.release_connection(self)
 
 class ConnectionPool(object):
-    def __init__(self, host="127.0.0.1", port=5658, max_conntion = 4):
+    def __init__(self, host="127.0.0.1", port=5658, max_conntion = 4, reader_factory = None):
         self._host = host
         self._port = port
         self._max_conntion = max_conntion
@@ -23,11 +23,13 @@ class ConnectionPool(object):
         self._used_conntions = {}
         self._lock = threading.Lock()
         self._semaphore = threading.Semaphore(self._max_conntion)
+        self._reader_factory = reader_factory
 
     def create_connection(self):
-        conn = Connection(self._host, self._port)
-        conn.connect()
+        conn = Connection(self, self._host, self._port, self._reader_factory)
+        conn.reader.start()
         self._connections.append(conn)
+        return conn
 
     def get_connection(self):
         self._semaphore.acquire(True)
