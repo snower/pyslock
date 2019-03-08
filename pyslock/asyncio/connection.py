@@ -6,10 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 from asyncio import coroutine, events, Protocol, ensure_future
 from ..protocol.result import Result
-
-
-class ConnectTimeOutError(Exception):
-    pass
+from ..protocol.exceptions import ConnectTimeOutError
 
 
 class Connection(Protocol):

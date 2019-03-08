@@ -4,10 +4,7 @@
 
 from ..utils import ensure_bytes
 from .lock import Lock, LockLockedError, LockUnlockedError, LockTimeoutError
-
-
-class EventWaitTimeoutError(Exception):
-    pass
+from ..protocol.exceptions import EventWaitTimeoutError
 
 
 class Event(object):
@@ -61,4 +58,24 @@ class Event(object):
             await self._wait_lock.acquire()
         except LockTimeoutError:
             raise self.WaitTimeoutError()
+        return True
+
+
+class CycleEvent(Event):
+    async def wait(self, timeout=60):
+        self._wait_lock = Lock(self._db, self._event_name, timeout, 0)
+
+        try:
+            await self._wait_lock.acquire()
+        except LockTimeoutError:
+            if self._event_lock is None:
+                self._event_lock = Lock(self._db, self._event_name, self._timeout, self._expried, self._event_id)
+            try:
+                await self._event_lock.acquire(0x20)
+            except LockLockedError:
+                raise self.WaitTimeoutError()
+
+            try:
+                await self._event_lock.release()
+            except: pass
         return True

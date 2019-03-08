@@ -12,13 +12,17 @@ class AsyncClient(object):
         self._dbs = [None for _ in range(db_range)]
         self.select(0)
 
-    def Lock(self, lock_name, timeout=0, expried=0, max_count=1):
+    def Lock(self, lock_name, timeout=0, expried=0):
         db = self.select(0)
-        return db.Lock(lock_name, timeout, expried, max_count=max_count)
+        return db.Lock(lock_name, timeout, expried)
 
     def Event(self, event_name, timeout=0, expried=0):
         db = self.select(0)
         return db.Event(event_name, timeout, expried)
+
+    def CycleEvent(self, event_name, timeout=0, expried=0):
+        db = self.select(0)
+        return db.CycleEvent(event_name, timeout, expried)
 
     def select(self, db=0):
         if db >= len(self._dbs):

@@ -30,6 +30,7 @@ version_info = (0, 0, 1)
 from .utils import UniqId, py3
 from .client import Client
 from .reader import Reader
+from .protocol.exceptions import *
 
 if py3:
     from .asyncio.client import AsyncClient

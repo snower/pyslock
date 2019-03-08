@@ -5,34 +5,8 @@
 from .utils import UniqId
 from .protocol.command import Command
 from .protocol.result import *
-
-
-class LockException(Exception):
-    pass
-
-
-class LockLockedError(LockException):
-    pass
-
-
-class LockUnlockedError(LockException):
-    pass
-
-
-class LockIsLockingError(LockException):
-    pass
-
-
-class LockIsUnlockingError(LockException):
-    pass
-
-
-class LockTimeoutError(LockException):
-    pass
-
-
-class LockUnlockNotOwnError(LockException):
-    pass
+from .protocol.exceptions import LockException, LockLockedError, LockUnlockedError, \
+    LockIsLockingError, LockIsUnlockingError, LockTimeoutError, LockUnlockNotOwnError
 
 
 class Lock(object):
@@ -48,15 +22,15 @@ class Lock(object):
     def generate(self):
         return UniqId().to_bytes()
 
-    def acquire(self):
-        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, 0, max(self._max_count - 1, 0))
+    def acquire(self, flag = 0):
+        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0))
         result = self._db.command(self, command)
         if not result:
             raise LockTimeoutError()
         self.on_result(result)
 
-    def release(self):
-        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, 0, max(self._max_count - 1, 0))
+    def release(self, flag = 0):
+        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0))
         result = self._db.command(self, command)
         if not result:
             raise LockTimeoutError()

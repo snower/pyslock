@@ -6,38 +6,8 @@ from ..utils import UniqId
 from asyncio import Future
 from ..protocol.command import Command
 from ..protocol.result import *
-
-
-class LockException(Exception):
-    pass
-
-
-class LockLockedError(LockException):
-    pass
-
-
-class LockUnlockedError(LockException):
-    pass
-
-
-class LockIsLockingError(LockException):
-    pass
-
-
-class LockIsUnlockingError(LockException):
-    pass
-
-
-class LockTimeoutError(LockException):
-    pass
-
-
-class LockUnlockNotOwnError(LockException):
-    pass
-
-
-class LockClosedError(LockException):
-    pass
+from ..protocol.exceptions import LockException, LockLockedError, LockUnlockedError, \
+    LockIsLockingError, LockIsUnlockingError, LockTimeoutError, LockUnlockNotOwnError
 
 
 class Lock(object):
@@ -55,24 +25,24 @@ class Lock(object):
     def generate(self):
         return UniqId().to_bytes()
 
-    def acquire(self):
+    def acquire(self, flag = 0):
         if self._lock_future:
             raise LockIsLockingError()
 
         self._lock_future = Future()
-        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, 0, max(self._max_count - 1, 0))
+        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0))
         def finish(future):
             self._lock_future = None
         self._lock_future.add_done_callback(finish)
         self._db.command(self, command, self._lock_future)
         return self._lock_future
 
-    def release(self):
+    def release(self, flag = 0):
         if self._unlock_future:
             raise LockIsUnlockingError()
 
         self._unlock_future = Future()
-        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, 0, max(self._max_count - 1, 0))
+        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0))
         def finish(future):
             self._unlock_future = None
         self._unlock_future.add_done_callback(finish)

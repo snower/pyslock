@@ -2,8 +2,9 @@
 # 18/8/3
 # create by: snower
 
-from .lock import Lock, LockClosedError, LockIsLockingError
-from .event import Event
+from .lock import Lock, LockIsLockingError
+from .event import Event, CycleEvent
+from ..protocol.exceptions import ConnectionClosedError
 
 
 class DataBase(object):
@@ -16,11 +17,14 @@ class DataBase(object):
     def id(self):
         return self._db
 
-    def Lock(self, lock_name, timeout=0, expried=0, max_count = 1):
-        return Lock(self, lock_name, timeout, expried, max_count = max_count)
+    def Lock(self, lock_name, timeout=0, expried=0):
+        return Lock(self, lock_name, timeout, expried)
 
     def Event(self, event_name, timeout=0, expried=0):
         return Event(self, event_name, timeout, expried)
+
+    def CycleEvent(self, event_name, timeout=0, expried=0):
+        return CycleEvent(self, event_name, timeout, expried)
 
     def command(self, lock, command, future):
         if command.request_id in self._locks:
@@ -45,6 +49,6 @@ class DataBase(object):
     def on_connection_close(self):
         for _, lock in self._locks:
             if lock._lock_future:
-                lock._lock_future.set_exception(LockClosedError())
+                lock._lock_future.set_exception(ConnectionClosedError())
             if lock._unlock_future:
-                lock._unlock_future.set_exception(LockClosedError())
+                lock._unlock_future.set_exception(ConnectionClosedError())

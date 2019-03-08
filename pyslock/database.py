@@ -4,7 +4,7 @@
 
 import threading
 from .lock import Lock
-from .event import Event
+from .event import Event, CycleEvent
 
 
 class DataBase(object):
@@ -18,11 +18,14 @@ class DataBase(object):
     def id(self):
         return self._db
 
-    def Lock(self, lock_name, timeout=0, expried=0, max_count = 1):
-        return Lock(self, lock_name, timeout, expried, max_count = max_count)
+    def Lock(self, lock_name, timeout=0, expried=0):
+        return Lock(self, lock_name, timeout, expried)
 
     def Event(self, event_name, timeout=0, expried=0):
         return Event(self, event_name, timeout, expried)
+
+    def CycleEvent(self, event_name, timeout=0, expried=0):
+        return CycleEvent(self, event_name, timeout, expried)
 
     def command(self, lock, command):
         connection = self._client.get_connection()

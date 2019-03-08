@@ -4,9 +4,8 @@
 
 
 from ..utils import ensure_unicode, bytetoint
+from .exceptions import ProtocolResultDataIllegalError
 
-class ResultDataIllegalError(Exception):
-    pass
 
 RESULT_SUCCED = 0
 RESULT_UNKNOWN_MAGIC = 1
@@ -25,10 +24,12 @@ class Result(object):
 
     def __init__(self, data):
         if len(data) != 64:
-            raise ResultDataIllegalError
+            raise ProtocolResultDataIllegalError()
+
         self.magic = bytetoint(data[0])
         if self.magic != self.MAGIC:
-            raise ResultDataIllegalError
+            raise ProtocolResultDataIllegalError()
+
         self.version = bytetoint(data[1])
         self.command = bytetoint(data[2])
         self.request_id = data[3:19]

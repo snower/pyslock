@@ -5,9 +5,7 @@
 import socket
 import threading
 from .protocol.result import Result
-
-class ConnectionClosed(Exception):
-    pass
+from .protocol.exceptions import ConnectionClosedError
 
 class Connection(object):
     def __init__(self, host="127.0.0.1", port=5658, reader_factory = None):
@@ -76,7 +74,7 @@ class Connection(object):
 
             if not data:
                 self.close()
-                raise ConnectionClosed()
+                raise ConnectionClosedError()
 
             self._buffer += data
             if len(self._buffer) >= 64:
