@@ -5,7 +5,8 @@
 import threading
 from .lock import Lock
 from .event import Event, CycleEvent
-
+from .semaphore import Semaphore
+from .rwlock import RWLock
 
 class DataBase(object):
     def __init__(self, client, db=0):
@@ -26,6 +27,12 @@ class DataBase(object):
 
     def CycleEvent(self, event_name, timeout=0, expried=0):
         return CycleEvent(self, event_name, timeout, expried)
+
+    def Semaphore(self, semaphore_name, timeout=0, expried=0, count=1):
+        return Semaphore(self, semaphore_name, timeout, expried, count)
+
+    def RWLock(self, lock_name, timeout=0, expried=0):
+        return RWLock(self, lock_name, timeout, expried)
 
     def command(self, lock, command):
         connection = self._client.get_connection()

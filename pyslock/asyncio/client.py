@@ -24,6 +24,14 @@ class AsyncClient(object):
         db = self.select(0)
         return db.CycleEvent(event_name, timeout, expried)
 
+    def Semaphore(self, semaphore_name, timeout=0, expried=0, count=1):
+        db = self.select(0)
+        return db.Semaphore(semaphore_name, timeout, expried, count)
+
+    def RWLock(self, lock_name, timeout=0, expried=0):
+        db = self.select(0)
+        return db.RWLock(lock_name, timeout, expried)
+
     def select(self, db=0):
         if db >= len(self._dbs):
             return None

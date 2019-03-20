@@ -4,10 +4,9 @@
 
 from .database import DataBase
 from .connection import Connection
-from .pool import ConnectionPool
 
 class Client(object):
-    def __init__(self, host, port=5658, db_range = 256, max_connection = 1, reader_factory = None):
+    def __init__(self, host, port=5658, db_range = 256, reader_factory = None):
         def reader_factory_func(connection):
             if reader_factory is None:
                 from .reader import Reader
@@ -15,16 +14,9 @@ class Client(object):
 
             return reader_factory(self, connection)
 
-        if max_connection == 1:
-            self._connection = Connection(host, port, reader_factory_func)
-            self._connection.reader.start()
-            self._connection_pool = None
-        else:
-            self._connection = None
-            self._connection_pool = ConnectionPool(host, port, max_connection, reader_factory_func)
-
+        self._connection = Connection(host, port, reader_factory_func)
         self._dbs = [None for _ in range(db_range)]
-        self.select(0)
+        self._reader_stared = False
 
     def Lock(self, lock_name, timeout=0, expried=0):
         db = self.select(0)
@@ -38,6 +30,14 @@ class Client(object):
         db = self.select(0)
         return db.CycleEvent(event_name, timeout, expried)
 
+    def Semaphore(self, semaphore_name, timeout=0, expried=0, count=1):
+        db = self.select(0)
+        return db.Semaphore(semaphore_name, timeout, expried, count)
+
+    def RWLock(self, lock_name, timeout=0, expried=0):
+        db = self.select(0)
+        return db.RWLock(lock_name, timeout, expried)
+
     def select(self, db=0):
         if db >= len(self._dbs):
             return None
@@ -48,10 +48,10 @@ class Client(object):
         return self._dbs[db]
 
     def get_connection(self):
-        if self._connection:
-            return self._connection
-
-        return self._connection_pool.get_connection()
+        if not self._reader_stared:
+            self._connection.reader.start()
+            self._reader_stared = True
+        return self._connection
 
     def on_result(self, result):
         db = self.select(result.db_id)
