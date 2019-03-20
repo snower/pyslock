@@ -10,14 +10,14 @@ class RWLock(object):
     def __init__(self, db, lock_name, timeout=0, expried=0):
         self._db = db
         self._db_id = db.id
-        self._semaphore_name = ensure_bytes(lock_name)
+        self._lock_name = ensure_bytes(lock_name)
         self._rlocks = deque()
         self._wlock = None
         self._timeout = timeout
         self._expried = expried
 
     def racquire(self):
-        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, max_count=0x10000)
+        lock = Lock(self._db, self._lock_name, self._timeout, self._expried, max_count=0x10000)
         lock.acquire()
         self._rlocks.append(lock)
 
@@ -31,7 +31,7 @@ class RWLock(object):
 
     def acquire(self):
         if not self._wlock:
-            self._wlock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, max_count=1)
+            self._wlock = Lock(self._db, self._lock_name, self._timeout, self._expried, max_count=1)
         self._wlock.acquire()
 
     def release(self):
