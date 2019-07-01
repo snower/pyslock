@@ -3,7 +3,7 @@
 # create by: snower
 
 from collections import deque
-from .utils import ensure_bytes
+from ..utils import ensure_bytes
 from .lock import Lock, LockUnlockedError
 
 class RWLock(object):

@@ -10,7 +10,7 @@ from .protocol.exceptions import LockException, LockLockedError, LockUnlockedErr
 
 
 class Lock(object):
-    def __init__(self, db, lock_name, timeout=0, expried=0, lock_id=None, max_count=1):
+    def __init__(self, db, lock_name, timeout=0, expried=0, lock_id=None, max_count=1, reentrant_count = 0):
         self._db = db
         self._db_id = db.id
         self._lock_name = lock_name
@@ -18,19 +18,20 @@ class Lock(object):
         self._timeout = timeout
         self._expried = expried
         self._max_count = max_count
+        self._reentrant_count = reentrant_count
 
     def generate(self):
         return UniqId().to_bytes()
 
     def acquire(self, flag = 0):
-        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0))
+        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0), self._reentrant_count)
         result = self._db.command(self, command)
         if not result:
             raise LockTimeoutError()
         self.on_result(result)
 
     def release(self, flag = 0):
-        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0))
+        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0), self._reentrant_count)
         result = self._db.command(self, command)
         if not result:
             raise LockTimeoutError()

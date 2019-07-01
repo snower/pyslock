@@ -11,7 +11,7 @@ from ..protocol.exceptions import LockException, LockLockedError, LockUnlockedEr
 
 
 class Lock(object):
-    def __init__(self, db, lock_name, timeout=5, expried=8, lock_id = None, max_count = 1):
+    def __init__(self, db, lock_name, timeout=5, expried=8, lock_id = None, max_count = 1, reentrant_count = 0):
         self._db = db
         self._db_id = db.id
         self._lock_name = lock_name
@@ -19,6 +19,7 @@ class Lock(object):
         self._timeout = timeout
         self._expried = expried
         self._max_count = max_count
+        self._reentrant_count = reentrant_count
         self._lock_future = None
         self._unlock_future = None
 
@@ -30,7 +31,7 @@ class Lock(object):
             raise LockIsLockingError()
 
         self._lock_future = Future()
-        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0))
+        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0), self._reentrant_count)
         def finish(future):
             self._lock_future = None
         self._lock_future.add_done_callback(finish)
@@ -42,7 +43,7 @@ class Lock(object):
             raise LockIsUnlockingError()
 
         self._unlock_future = Future()
-        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0))
+        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0), self._reentrant_count)
         def finish(future):
             self._unlock_future = None
         self._unlock_future.add_done_callback(finish)

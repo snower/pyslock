@@ -7,6 +7,7 @@ from .event import Event, CycleEvent
 from ..protocol.exceptions import ConnectionClosedError
 from .semaphore import Semaphore
 from .rwlock import RWLock
+from .rlock import RLock
 
 class DataBase(object):
     def __init__(self, client, db=0):
@@ -32,6 +33,9 @@ class DataBase(object):
 
     def RWLock(self, lock_name, timeout=0, expried=0):
         return RWLock(self, lock_name, timeout, expried)
+
+    def RLock(self, lock_name, timeout=0, expried=0):
+        return RLock(self, lock_name, timeout, expried)
 
     def command(self, lock, command, future):
         if command.request_id in self._locks:

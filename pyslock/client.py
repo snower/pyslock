@@ -38,6 +38,10 @@ class Client(object):
         db = self.select(0)
         return db.RWLock(lock_name, timeout, expried)
 
+    def RLock(self, lock_name, timeout=0, expried=0):
+        db = self.select(0)
+        return db.RLock(lock_name, timeout, expried)
+
     def select(self, db=0):
         if db >= len(self._dbs):
             return None

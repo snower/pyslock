@@ -45,8 +45,7 @@ else:
                 return s
         return s
 
-    def bytetoint(b):
-        return ord(b)
+    bytetoint = ord
 
 def _machine_bytes():
     machine_hash = hashlib.md5()
