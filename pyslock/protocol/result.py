@@ -39,4 +39,4 @@ class Result(object):
         self.db_id = bytetoint(data[21])
         self.lock_id = data[22:38]
         self.lock_name = ensure_unicode(data[38:54])
-        self.lcount, self.count, self.rcount = struct.unpack("<HHB", data[54:59])
+        self.lcount, self.count, self.lrcount, self.rcount = struct.unpack("<HHBB", data[54:60])

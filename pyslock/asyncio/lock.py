@@ -58,7 +58,7 @@ class Lock(object):
 
     def on_lock_result(self, result):
         if result.result == RESULT_SUCCED:
-            self._lock_future.set_result(result.result)
+            self._lock_future.set_result(result)
         else:
             if result.result == RESULT_LOCKED_ERROR:
                 e = LockLockedError()
@@ -70,7 +70,7 @@ class Lock(object):
 
     def on_unlock_result(self, result):
         if result.result == RESULT_SUCCED:
-            self._unlock_future.set_result(result.result)
+            self._unlock_future.set_result(result)
         else:
             if result.result == RESULT_UNLOCK_ERROR:
                 e = LockUnlockedError()
