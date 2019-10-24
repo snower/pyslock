@@ -43,7 +43,7 @@ class DataBase(object):
         event = threading.Event()
         self._locks[command.request_id] = event
         connection.write(command)
-        succed = event.wait(command.timeout)
+        succed = event.wait(max(command.timeout, 3) if command.timeout & 0x04000000 == 0 else int((command.timeout & 0xffff) / 1000 + 1))
         with self._lock:
             result = self._locks[command.request_id] if succed else None
             del self._locks[command.request_id]

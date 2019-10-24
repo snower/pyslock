@@ -7,8 +7,15 @@ from asyncio import Future
 from ..protocol.command import Command
 from ..protocol.result import *
 from ..protocol.exceptions import LockException, LockLockedError, LockUnlockedError, \
-    LockIsLockingError, LockIsUnlockingError, LockTimeoutError, LockUnlockNotOwnError
+    LockIsLockingError, LockIsUnlockingError, LockTimeoutError, LockExpriedError, LockNotOwnError
 
+ERRORS = {
+    5: LockLockedError,
+    6: LockUnlockedError,
+    7: LockNotOwnError,
+    8: LockTimeoutError,
+    9: LockExpriedError,
+}
 
 class Lock(object):
     def __init__(self, db, lock_name, timeout=5, expried=8, lock_id = None, max_count = 1, reentrant_count = 0):
@@ -28,7 +35,7 @@ class Lock(object):
 
     def acquire(self, flag = 0):
         if self._lock_future:
-            raise LockIsLockingError()
+            raise LockIsLockingError(Result(b'\x56\x01' + b'\x00' * 62))
 
         self._lock_future = Future()
         command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0), self._reentrant_count)
@@ -40,7 +47,7 @@ class Lock(object):
 
     def release(self, flag = 0):
         if self._unlock_future:
-            raise LockIsUnlockingError()
+            raise LockIsUnlockingError(Result(b'\x56\x01' + b'\x00' * 62))
 
         self._unlock_future = Future()
         command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0), self._reentrant_count)
@@ -60,24 +67,20 @@ class Lock(object):
         if result.result == RESULT_SUCCED:
             self._lock_future.set_result(result)
         else:
-            if result.result == RESULT_LOCKED_ERROR:
-                e = LockLockedError()
-            elif result.result == RESULT_TIMEOUT:
-                e = LockTimeoutError()
+            if result.result in ERRORS:
+                e = ERRORS[result.result](result)
             else:
-                e = LockException()
+                e = LockException(result)
             self._lock_future.set_exception(e)
 
     def on_unlock_result(self, result):
         if result.result == RESULT_SUCCED:
             self._unlock_future.set_result(result)
         else:
-            if result.result == RESULT_UNLOCK_ERROR:
-                e = LockUnlockedError()
-            elif result.result == RESULT_UNOWN_ERROR:
-                e = LockUnlockNotOwnError()
+            if result.result in ERRORS:
+                e = ERRORS[result.result](result)
             else:
-                e = LockException()
+                e = LockException(result)
             self._unlock_future.set_exception(e)
 
     async def __aenter__(self):

@@ -27,8 +27,9 @@ class ProtocolResultDataIllegalError(Exception):
 
 
 class LockException(SlockException):
-    pass
-
+    def __init__(self, result, *args, **kwargs):
+        self.result = result
+        super(LockException, self).__init__(*args, **kwargs)
 
 class LockLockedError(LockException):
     pass
@@ -49,8 +50,10 @@ class LockIsUnlockingError(LockException):
 class LockTimeoutError(LockException):
     pass
 
+class LockExpriedError(LockException):
+    pass
 
-class LockUnlockNotOwnError(LockException):
+class LockNotOwnError(LockException):
     pass
 
 
@@ -58,5 +61,5 @@ class EventException(SlockException):
     pass
 
 
-class EventWaitTimeoutError(Exception):
+class EventWaitTimeoutError(SlockException):
     pass
