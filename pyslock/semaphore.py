@@ -27,8 +27,8 @@ class Semaphore(object):
                 return 0
             return 1
 
+        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, lock_id=b'\x00' * 16, max_count=self._count)
         for i in range(n):
-            lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, lock_id=b'\x00' * 16, max_count=self._count)
             try:
                 lock.release(0x01)
             except (LockUnlockedError, LockNotOwnError):
