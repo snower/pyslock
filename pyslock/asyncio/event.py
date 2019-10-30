@@ -71,7 +71,7 @@ class CycleEvent(Event):
             if self._event_lock is None:
                 self._event_lock = Lock(self._db, self._event_name, self._timeout, self._expried, self._event_id)
             try:
-                await self._event_lock.acquire(0x20)
+                await self._event_lock.acquire(0x02)
             except LockLockedError:
                 raise self.WaitTimeoutError()
 
