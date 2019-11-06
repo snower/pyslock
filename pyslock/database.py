@@ -50,7 +50,7 @@ class DataBase(object):
         return result
 
     def on_result(self, result):
-        if result.request_id in self._locks:
+        if result.request_id in self._locks.items():
             with self._lock:
                 event = self._locks[result.request_id]
                 self._locks[result.request_id] = result

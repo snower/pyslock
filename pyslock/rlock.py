@@ -3,7 +3,7 @@
 # create by: snower
 
 from .utils import ensure_bytes
-from .lock import Lock, LockUnlockedError, LockLockedError
+from .lock import Lock, Result, LockUnlockedError, LockLockedError
 
 class RLock(object):
     def __init__(self, db, lock_name, timeout=0, expried=60):
@@ -18,14 +18,14 @@ class RLock(object):
 
     def acquire(self):
         if self._locked_count >= 0xff:
-            raise LockLockedError()
+            raise LockLockedError(Result(b'\x56\x01' + b'\x00' * 62))
 
         self._lock.acquire()
         self._locked_count += 1
 
     def release(self):
         if self._locked_count == 0:
-            raise LockUnlockedError()
+            raise LockUnlockedError(Result(b'\x56\x01' + b'\x00' * 62))
 
         self._locked_count -= 1
         self._lock.release()

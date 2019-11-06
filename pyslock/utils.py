@@ -66,7 +66,7 @@ class UniqId(object):
         oid += struct.pack(">H", os.getpid() % 0xFFFF)
         with UniqId._inc_lock:
             oid += struct.pack(">i", UniqId._inc)
-            UniqId._inc = (UniqId._inc + 1) % 0xFFFFFFFF
+            UniqId._inc = (UniqId._inc + 1) % 0x7FFFFFFF
 
         self.__id = oid
 

@@ -2,7 +2,7 @@
 # 18/8/3
 # create by: snower
 
-from .lock import Lock, LockIsLockingError
+from .lock import Lock, Result, LockIsLockingError
 from .event import Event, CycleEvent
 from ..protocol.exceptions import ConnectionClosedError
 from .semaphore import Semaphore
@@ -39,7 +39,7 @@ class DataBase(object):
 
     def command(self, lock, command, future):
         if command.request_id in self._locks:
-            raise LockIsLockingError()
+            raise LockIsLockingError(Result(b'\x56\x01' + b'\x00' * 62))
 
         self._locks[command.request_id] = lock
 
@@ -58,7 +58,7 @@ class DataBase(object):
             lock.on_result(result)
 
     def on_connection_close(self):
-        for _, lock in self._locks:
+        for _, lock in self._locks.items():
             if lock._lock_future:
                 lock._lock_future.set_exception(ConnectionClosedError())
             if lock._unlock_future:

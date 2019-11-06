@@ -4,7 +4,7 @@
 
 from collections import deque
 from ..utils import ensure_bytes
-from .lock import Lock, LockUnlockedError
+from .lock import Lock, Result, LockUnlockedError
 
 class RWLock(object):
     def __init__(self, db, lock_name, timeout=0, expried=0):
@@ -25,7 +25,7 @@ class RWLock(object):
         try:
             lock = self._rlocks.popleft()
         except IndexError:
-            raise LockUnlockedError()
+            raise LockUnlockedError(Result(b'\x56\x01' + b'\x00' * 62))
         else:
             await lock.release()
 
@@ -36,6 +36,6 @@ class RWLock(object):
 
     async def release(self):
         if not self._wlock:
-            raise LockUnlockedError()
+            raise LockUnlockedError(Result(b'\x56\x01' + b'\x00' * 62))
 
         await self._wlock.release()
