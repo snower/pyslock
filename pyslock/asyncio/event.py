@@ -26,7 +26,7 @@ class Event(object):
             self._event_lock = Lock(self._db, self._event_name, self._timeout, self._expried, self._event_id)
 
         try:
-            await self._event_lock.acquire()
+            await self._event_lock.acquire(0x02)
         except LockLockedError:
             pass
         return None
