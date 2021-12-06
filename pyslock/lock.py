@@ -30,15 +30,17 @@ class Lock(object):
     def generate(self):
         return UniqId().to_bytes()
 
-    def acquire(self, flag = 0):
-        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0), self._reentrant_count)
+    def acquire(self, flag=0):
+        command = Command(Command.COMMAND_TYPE.LOCK, self._lock_id, self._db_id, self._lock_name, self._timeout,
+                          self._expried, flag, max(self._max_count - 1, 0), max(self._reentrant_count - 1, 0))
         result = self._db.command(self, command)
         if not result:
             raise LockTimeoutError(Result(b'\x56\x01' + b'\x00' * 62))
         self.on_result(result)
 
     def release(self, flag = 0):
-        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout, self._expried, flag, max(self._max_count - 1, 0), self._reentrant_count)
+        command = Command(Command.COMMAND_TYPE.UNLOCK, self._lock_id, self._db_id, self._lock_name, self._timeout,
+                          self._expried, flag, max(self._max_count - 1, 0), max(self._reentrant_count - 1, 0))
         result = self._db.command(self, command)
         if not result:
             raise LockTimeoutError(Result(b'\x56\x01' + b'\x00' * 62))

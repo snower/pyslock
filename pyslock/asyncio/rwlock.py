@@ -17,7 +17,7 @@ class RWLock(object):
         self._expried = expried
 
     async def racquire(self):
-        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, max_count=0x10000)
+        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, max_count=0xffff)
         await lock.acquire()
         self._rlocks.append(lock)
 

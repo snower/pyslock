@@ -6,7 +6,7 @@ from .utils import ensure_bytes
 from .lock import Lock, LockUnlockedError, LockNotOwnError, LockTimeoutError
 
 class Semaphore(object):
-    def __init__(self, db, semaphore_name, timeout=0, expried=60, count = 1):
+    def __init__(self, db, semaphore_name, timeout=0, expried=60, count=1):
         self._db = db
         self._db_id = db.id
         self._semaphore_name = ensure_bytes(semaphore_name)
@@ -15,19 +15,19 @@ class Semaphore(object):
         self._count = count
 
     def acquire(self):
-        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, max_count=self._count)
+        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, max_count=self._count + 1)
         lock.acquire()
 
-    def release(self, n = 1):
+    def release(self, n=1):
         if n == 1:
             try:
-                lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, max_count=self._count)
+                lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, max_count=self._count + 1)
                 lock.release(0x01)
             except (LockUnlockedError, LockNotOwnError):
                 return 0
             return 1
 
-        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, lock_id=b'\x00' * 16, max_count=self._count)
+        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, lock_id=b'\x00' * 16, max_count=self._count + 1)
         for i in range(n):
             try:
                 lock.release(0x01)
@@ -37,7 +37,7 @@ class Semaphore(object):
 
     def release_all(self):
         n = 0
-        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, lock_id=b'\x00' * 16, max_count=self._count)
+        lock = Lock(self._db, self._semaphore_name, self._timeout, self._expried, lock_id=b'\x00' * 16, max_count=self._count + 1)
         while True:
             try:
                 lock.release(0x01)

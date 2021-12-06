@@ -13,7 +13,7 @@ class RLock(object):
         self._timeout = timeout
         self._expried = expried
 
-        self._lock = Lock(db, lock_name, timeout, expried, reentrant_count = 0xff)
+        self._lock = Lock(db, lock_name, timeout, expried, reentrant_count=0xff)
         self._locked_count = 0
 
     def acquire(self):
