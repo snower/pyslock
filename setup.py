@@ -2,13 +2,19 @@
 # 14-8-8
 # create by: snower
 
-from setuptools import setup
+import os
+from setuptools import find_packages, setup
 
+if os.path.exists("README.md"):
+    with open("README.md") as fp:
+        long_description = fp.read()
+else:
+    long_description = 'https://github.com/snower/syncany'
 
 setup(
     name='pyslock',
     version='0.0.1',
-    packages=['pyslock', 'pyslock.protocol', 'pyslock.asyncio'],
+    packages=find_packages(),
     install_requires=[],
     author='snower',
     author_email='sujian199@gmail.com',
@@ -17,7 +23,11 @@ setup(
     keywords=[
         "shared lock", "slock"
     ],
+    package_data={
+        '': ['README.md'],
+    },
     description='High-performance distributed shared lock service client driver',
-    long_description=open("README.rst").read(),
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     zip_safe=False,
 )
