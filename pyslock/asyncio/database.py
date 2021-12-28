@@ -3,7 +3,7 @@
 # create by: snower
 
 from .lock import Lock, Result, LockIsLockingError
-from .event import Event, CycleEvent
+from .event import Event
 from ..protocol.exceptions import ConnectionClosedError
 from .semaphore import Semaphore
 from .rwlock import RWLock
@@ -22,11 +22,8 @@ class DataBase(object):
     def Lock(self, lock_name, timeout=0, expried=0):
         return Lock(self, lock_name, timeout, expried)
 
-    def Event(self, event_name, timeout=0, expried=0):
-        return Event(self, event_name, timeout, expried)
-
-    def CycleEvent(self, event_name, timeout=0, expried=0):
-        return CycleEvent(self, event_name, timeout, expried)
+    def Event(self, event_name, timeout=0, expried=0, default_seted=True):
+        return Event(self, event_name, timeout, expried, default_seted)
 
     def Semaphore(self, semaphore_name, timeout=0, expried=0, count=1):
         return Semaphore(self, semaphore_name, timeout, expried, count)

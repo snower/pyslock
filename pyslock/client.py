@@ -22,13 +22,9 @@ class Client(object):
         db = self.select(0)
         return db.Lock(lock_name, timeout, expried)
 
-    def Event(self, event_name, timeout=0, expried=0):
+    def Event(self, event_name, timeout=0, expried=0, default_seted=True):
         db = self.select(0)
-        return db.Event(event_name, timeout, expried)
-
-    def CycleEvent(self, event_name, timeout=0, expried=0):
-        db = self.select(0)
-        return db.CycleEvent(event_name, timeout, expried)
+        return db.Event(event_name, timeout, expried, default_seted)
 
     def Semaphore(self, semaphore_name, timeout=0, expried=0, count=1):
         db = self.select(0)
